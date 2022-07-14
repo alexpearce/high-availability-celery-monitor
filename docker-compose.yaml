@@ -1,0 +1,40 @@
+version: "3.9"
+services:
+  producer:
+    image: high-availability-celery-monitor:local
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: ["python3", "app.py", "producer"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  consumer:
+    image: high-availability-celery-monitor:local
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: ["python3", "app.py", "consumer"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  monitor:
+    image: high-availability-celery-monitor:local
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: ["python3", "-u", "app.py", "monitor"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  rabbitmq:
+    hostname: rabbitmq
+    image: rabbitmq:3.10
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
